@@ -9,7 +9,7 @@ import json
 class IssuesView(View):
     def get(self,request,*args,**kwargs):
         ctx = {}
-        tmp = '/Users/apple/Documents/assignment/githubintegration/templates/issues/issues-list.jinja'
+        tmp = 'issues/issues-list.jinja'
         req = requests.get("https://api.github.com/repos/pallets/click/issues?page=1")
         json_req = req.json()
         ctx['issues'] = json_req
