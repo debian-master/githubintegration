@@ -19,7 +19,7 @@ class IssuesFetchView(View):
     '''This View will fetch the data from GitHub-Apis and will store it into database'''
     def get(self,request,*args,**kwargs):
         try:
-            i = 1
+            iterations = 1
             tmp = 'issues/issues-list.jinja'
             social_user = UserSocialAuth.objects.all().values('extra_data')
             social_user_auth = social_user[0]['extra_data']['access_token']
@@ -28,7 +28,7 @@ class IssuesFetchView(View):
             }
             page_no = 1
             state = 'open'
-            while i > 0:
+            while iterations > 0:
                 url = f"https://api.github.com/repos/pallets/click/issues?state={state}&per_page=100\
                         &page={page_no}"
                 page_no += 1
@@ -41,8 +41,8 @@ class IssuesFetchView(View):
                     page_no=1
                 print(url)
                 for issue in json_req:
-                    a = Issues.objects.filter(id=issue['id']).exists()
-                    if not a:
+                    issues = Issues.objects.filter(id=issue['id']).exists()
+                    if not issues:
                         create_issues = Issues.objects.create(
                                         id=issue['id'], number= issue['number'],title=issue['title'],
                                         state=issue['state'],created_at=issue['created_at'],update_at=issue['updated_at'],
@@ -83,8 +83,8 @@ class IssuesFetchView(View):
         req_labels = requests.request("GET", url, headers=headers)
         json_labels = req_labels.json()
         for label in json_labels:
-            a = Labels.objects.filter(node_id=label['node_id']).exists()
-            if not a:
+            labels = Labels.objects.filter(node_id=label['node_id']).exists()
+            if not labels:
                 Labels.objects.create(
                         id=label['id'], name=label['name'], node_id=label['node_id'],
                         description=label['description']
@@ -103,8 +103,8 @@ class IssuesFetchView(View):
         json_assignee = req_assignees.json()
         for issue in json_assignee:
             for assignee in issue['assignees']:
-                b = Assignee.objects.filter(id=assignee['id']).exists()
-                if not b:
+                assignees = Assignee.objects.filter(id=assignee['id']).exists()
+                if not assignees:
                     Assignee.objects.create(
                             id=assignee['id'],name=assignee['login'],html_url=assignee['html_url']
                     )
@@ -134,7 +134,8 @@ class RateLimit(View):
 
 
 class IssuesView(APIView):
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         issues = Issues.objects.all()
+        
         serializer = IssuesSerializer(issues, many=True)
         return Response(serializer.data)
