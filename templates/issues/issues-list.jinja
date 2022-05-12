@@ -1,10 +1,12 @@
-{% for issue in issues %}
-{{ issue }}
-<br>
-<br>
-{% endfor %}
-
 <a href='https://api.github.com/repos/pallets/click/issues?page={{num}}'>next</a>
 
 <a href="{% url 'social:begin' 'github' %}">Login with GitHub</a><br>
-{{ user }}
+<!--{{ user }}-->
+
+{% for issue in issues %}
+{% if issue.state == 'closed' %}
+{{ issue.title }} {{ issue.number }}
+<br>
+<br>
+{% endif %}
+{% endfor %}
