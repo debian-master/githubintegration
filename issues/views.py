@@ -3,17 +3,19 @@ from ast import Assign
 from pydoc import describe
 from re import template
 from urllib import response
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 # from django.views.generic.list import ListView
 from rest_framework.views import APIView
 from django.http import HttpResponse, JsonResponse
 import requests
 import json
+from django.db.models import Q
 from rest_framework.response import Response
 from .models import Labels, Issues, Assignee
 from .serializers import IssuesSerializer
 from social_django.models import UserSocialAuth
+from django.contrib.auth.decorators import login_required
 
 class IssuesFetchView(View):
     '''This View will fetch the data from GitHub-Apis and will store it into database'''
@@ -113,9 +115,8 @@ class IssuesFetchView(View):
 
 class Login(View):
     def get(self, request, *args, **kwargs):
-        tmp = 'issues/issues-list.jinja'
-        return render(request, tmp)
-
+        tmp = 'issues/login.jinja'
+        return redirect('/oauth/login/github')
 
 class RateLimit(View):
     def get(self, request, *args, **kwargs):
@@ -135,7 +136,28 @@ class RateLimit(View):
 
 class IssuesView(APIView):
     def get(self, request, *args, **kwargs):
-        issues = Issues.objects.all()
-        
+        context = {}
+        issues = Issues.objects.all().order_by('-created_at')
+        serializer = IssuesSerializer(issues, many=True)
+        context['issues'] = serializer.data
+        context['labels'] = Labels.objects.all()
+        context['assignees'] = Assignee.objects.all()
+        return render(request, 'issues/issues-list.jinja', context=context)
+
+class AjaxIssues(APIView):
+    def get(self,request,*args, **kwargs):
+        issues = Issues.objects.all().order_by('-created_at')
+        data = request.GET
+        print(data)
+        if data:
+            if data.get('state'):
+                issues = issues.filter(state=data.get('state'))
+            if data.get('state')=='all':
+                issues = Issues.objects.all().order_by('-created_at')
+            if data.get('labels'):
+                issues = issues.filter(labels=data.get('labels'))
+            if data.get('assignee'):
+                issues = issues.filter(assignee=data.get('assignee'))
         serializer = IssuesSerializer(issues, many=True)
         return Response(serializer.data)
+    

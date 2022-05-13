@@ -1,12 +1,176 @@
-<a href='https://api.github.com/repos/pallets/click/issues?page={{num}}'>next</a>
-
-<a href="{% url 'social:begin' 'github' %}">Login with GitHub</a><br>
+<style>
+a:link, a:visited,  a:hover, a:active
+{
+    color: #000000;
+    text-decoration: none;
+}
+table { border-collapse: collapse; }
+tr:nth-child(3) { border: solid thin; }
+</style>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<!--<a href="{% url 'social:begin' 'github' %}">Login with GitHub</a><br>-->
 <!--{{ user }}-->
-
+    {% if not user.is_authenticated %}
+    <h3>You don't access to this page. Please click on below button to register.</h3>
+{% include "issues/login.jinja" %}
+{% else %}
+<center>
+<select name="state_id" id="state_id">
+  <option value="all">All Issues</option>
+  <option value="open">Open Issues</option>
+  <option value="closed">Closed Issues</option>
+</select>
+<select name="labels" id="labels">
+  <option selected disabled>Choose a Labels</option>
+  {% for label in labels %}
+  <option value="{{label.id}}">{{label.name}}</option>
+  {% endfor %}
+</select>
+<select name="assignees" id="assignees">
+  <option selected disabled>Choose a Assignee</option>
+  {% for assignee in assignees %}
+  <option value="{{assignee.id}}">{{assignee.name}}</option>
+  {% endfor %}
+</select>
+<a href="{% url 'issues' %}"><button type="button">Clear</button></a>
+<a href="{% url 'rate_limit' %}"><button type="button">Check Rate Limit</button></a>
+</center>
+<br>
+<div class ='classIssues' id='issues'>
+<table class="table">
+<ul class="issues_li" id="issues_li">
 {% for issue in issues %}
-{% if issue.state == 'closed' %}
-{{ issue.title }} {{ issue.number }}
-<br>
-<br>
-{% endif %}
+<tr style="outline: thin solid">
+<li>
+<a href={{issue.issues_html_url}}><b>{{ issue.title }}</b></a>
+{{ issue.number }}
+{{ issue.state }}
+{% if issue.labels %}
+{% for label in issue.labels.all %}
+{{ label.name }}
 {% endfor %}
+{% endif %}
+{% if issue.assignee %}
+{% for assignee in issue.assignee %}
+<a href="{{assignee.url}}">{{ assignee.name }}</a>
+{% endfor %}
+{% endif %}
+</li>
+</tr>
+<br>
+{% endfor %}
+</ul>
+</table>
+</div>
+{% endif %}
+
+{% block js %}
+<script type='text/javascript'>
+var filterValues = {}
+$(document).ready(function() {
+console.log("hello outside of loop")
+
+$('#state_id').on("change", function(){
+        console.log("hello")
+        value = $("#state_id").val()
+        filterValues.state=value
+        console.log(filterValues)
+        console.log(value)
+    $.ajax({
+        type: "GET",
+        url: "/ajax_issues/",
+        data: filterValues,
+    success: function(response){
+        console.log(response[0]['title'])
+        $('.issues_li').empty()
+        $('.classIssues').empty()
+        console.log(response)
+        for (var i in response) {
+            var issues = `
+            <li class="issues_li" id="issues_li">
+            <a href="${response[i]['issues_html_url']}"><b>${response[i]['title']}</b></a>
+            ${response[i]['number']}
+            ${response[i]['state']}
+            ${response[i]['labels'] && response[i]['labels'][0]  ?response[i]['labels'][0]['name'] : ""}
+            ${response[i]['assignee'] && response[i]['assignee'][0]  ?response[i]['assignee'][0]['name'] : ""}
+             
+             </li>
+             <br>
+            `
+            $('.classIssues').append(issues)
+        
+        }
+
+    }
+    });
+    });
+    });
+$(document).ready(function() {
+$('#labels').on("change", function(){
+        console.log("hello")
+        value = $("#labels").val()
+        filterValues.labels=value
+        console.log(filterValues)
+    $.ajax({
+        type: "GET",
+        url: "/ajax_issues/",
+        data: filterValues,
+    success: function(response){
+        $('.issues_li').empty()
+        $('.classIssues').empty()
+        console.log(response)
+        for (var i in response) {
+            var issues = `
+            <li class="issues_li" id="issues_li">
+            <a href="${response[i]['issues_html_url']}"><b>${response[i]['title']}</b></a>
+            ${response[i]['number']}
+            ${response[i]['state']}
+            ${response[i]['labels'] && response[i]['labels'][0]  ?response[i]['labels'][0]['name'] : ""}
+            ${response[i]['assignee'] && response[i]['assignee'][0]  ?response[i]['assignee'][0]['name'] : ""}
+
+             </li>
+             <br>
+            `
+            $('.classIssues').append(issues)
+        
+        }
+
+    }
+    });
+    });
+    });
+$(document).ready(function() {
+$('#assignees').on("change", function(){
+        console.log("hello")
+    value = $("#assignees").val()
+    filterValues.assignee=value
+    console.log(filterValues)
+    $.ajax({
+        type: "GET",
+        url: "/ajax_issues/",
+        data: filterValues,
+    success: function(response){
+        $('.issues_li').empty()
+        $('.classIssues').empty()
+        console.log(response)
+        for (var i in response) {
+            var issues = `
+            <li class="issues_li" id="issues_li">
+            <a href="${response[i]['issues_html_url']}"><b>${response[i]['title']}</b></a>
+            ${response[i]['number']}
+            ${response[i]['state']}
+            ${response[i]['labels'] && response[i]['labels'][0]  ?response[i]['labels'][0]['name'] : ""}
+            ${response[i]['assignee'] && response[i]['assignee'][0]  ?response[i]['assignee'][0]['name'] : ""}
+             </li>
+             <br>
+            `
+            $('.classIssues').append(issues)
+        
+        }
+
+    }
+    })
+    });
+    });
+</script>
+{% endblock js %}

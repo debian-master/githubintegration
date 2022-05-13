@@ -1,0 +1,16 @@
+<style>
+.center-h {
+  display: flex; /* or display:grid */
+  justify-content: center;
+}
+.center-v {
+  display: flex;
+  align-items: center;
+}
+.h-500 {
+  height: 500;
+}
+</style>
+<div class="h-500 center-v center-h">
+<a href="{% url 'social:begin' 'github' %}"><center><button type="button">Login here with Github</button></center></a><br>
+</div>
