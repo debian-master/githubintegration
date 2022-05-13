@@ -54,14 +54,11 @@ class IssuesFetchView(View):
                         create_issues = Issues.objects.get(id=issue['id'])
                     if issue['labels']:
                         for label in issue['labels']:     
-                            # create_issues = Issues.objects.get(id=issue['id'])
                             labels_add = Labels.objects.get(id=label['id'])
                             create_issues.labels.add(labels_add)
                             create_issues.save()
-                    # print(issue['assignees'])
                     if issue['assignees']:
                         for assignee in issue['assignees']:      
-                            # create_issues = Issues.objects.get(id=issue['id'])
                             assignee_add = Assignee.objects.filter(id=assignee['id']).exists()
                             if not assignee_add:
                                 self.assignees_save()
@@ -100,7 +97,8 @@ class IssuesFetchView(View):
             'Authorization': f'Bearer {social_user_auth}'
         }
         page_no = 2
-        url = f"https://api.github.com/repos/pallets/click/issues?state=closed&per_page=100&page={page_no}"
+        url = f"https://api.github.com/repos/pallets/click/issues?state=closed&\
+                per_page=100&page={page_no}"
         req_assignees = requests.request("GET", url, headers=headers)
         json_assignee = req_assignees.json()
         for issue in json_assignee:
@@ -115,7 +113,7 @@ class IssuesFetchView(View):
 
 class Login(View):
     def get(self, request, *args, **kwargs):
-        tmp = 'issues/login.jinja'
+        #it is going to redirect to the github authorization page
         return redirect('/oauth/login/github')
 
 class RateLimit(View):
@@ -135,6 +133,7 @@ class RateLimit(View):
 
 
 class IssuesView(APIView):
+    '''It will pass data to the template'''
     def get(self, request, *args, **kwargs):
         context = {}
         issues = Issues.objects.all().order_by('-created_at')
@@ -145,6 +144,7 @@ class IssuesView(APIView):
         return render(request, 'issues/issues-list.jinja', context=context)
 
 class AjaxIssues(APIView):
+    '''It will give data in response to Asynchronous calls'''
     def get(self,request,*args, **kwargs):
         issues = Issues.objects.all().order_by('-created_at')
         data = request.GET
